@@ -1,1 +1,1 @@
-This repository compares some DL frameworks whose convolution performances are good.
+This repository compares some DL frameworks whose CPU convolution performances are good.
