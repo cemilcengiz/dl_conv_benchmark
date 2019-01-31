@@ -1,29 +1,43 @@
+import numpy as np
+
 import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 class PytorchNet(nn.Module):
-
-    def __init__(self, convweights, poolings=False):
+    # Filters come as a 4D Tensor of  [out_channels, in_channels, fil_height, fil_width]
+    def __init__(self, convfilters, poolings=False):
         super(PytorchNet, self).__init__()
-        self.conv_ops_ = []
-        for w in convweights:
-            #nn.Conv2d will take in a 4D Tensor of nSamples x nChannels x Height x Width
-            conv_op = nn.Conv2d(w[0], w[1], kernel_size=w[2], stride=1, padding=0)
-            self.conv_ops_.append(conv_op)
+        self.conv_filters_ = []
+        for w_array in convfilters:         
+            # Pytorch F.conv2d takes filter as a 4D Tensor of  [out_channels, in_channels, fil_height, fil_width]
+            w_tensor = torch.tensor(np.copy(w_array), dtype=torch.float32)
+            self.conv_filters_.append(w_tensor)
+            
         self.poolings_ = poolings
         
         
     def forward(self, x):
-        x = torch.from_numpy(x)
+        # Pytorch nn.Conv2d takes in a 4D Tensor of [nSamples x nChannels x Height x Width]
+        x = torch.tensor(x, dtype=torch.float32) # returns copy
+        
         layer = 0
         t0 = time.time()
-        for conv_op in self.conv_ops_:
-            x =  conv_op(x)
+        for w in self.conv_filters_:           
+            print("layer:", layer)
+            print("size of x before:", x.shape)
+            print("size of filter :", w.shape)
+            
+            x = F.conv2d(x, w, stride=1, padding=0)
+            print("size of x after filter:", x.shape)
+
             if self.poolings_:
                 x = F.max_pool2d(x, self.poolings_[layer])
+                print("size of x after pool:", x.shape)
+                print(" ")
                 layer += 1
         
         t1 = time.time()
-        return (x, (t1-t0))
+        #return (x.numpy(), (t1-t0))
+        return (x.numpy(), (t1-t0), self.conv_filters_)
