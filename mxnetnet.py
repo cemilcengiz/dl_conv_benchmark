@@ -27,7 +27,6 @@ class MXNetNet():
             print("size of x before:", x.shape)
             print("size of filter :", w.shape)
             
-            #x = nd.Convolution(data=x, weight=w)
             x = nd.Convolution(data=x, weight=w, kernel=w.shape[-2:], num_filter=w.shape[0], no_bias=True)
             print("size of x after filter:", x.shape)
 
