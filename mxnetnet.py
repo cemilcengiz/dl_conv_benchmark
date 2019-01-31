@@ -1,5 +1,4 @@
 import numpy as np
-
 import time
 import mxnet as mx
 from mxnet import nd, autograd, gluon

@@ -1,8 +1,6 @@
 import numpy as np
-
 import time
 import tensorflow as tf
-
 
 class TFNet():
     # Filters come as a 4D Tensor of  [out_channels, in_channels, fil_height, fil_width]
