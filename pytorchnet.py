@@ -24,20 +24,11 @@ class PytorchNet(nn.Module):
         
         layer = 0
         t0 = time.time()
-        for w in self.conv_filters_:           
-            print("layer:", layer)
-            print("size of x before:", x.shape)
-            print("size of filter :", w.shape)
-            
+        for w in self.conv_filters_:                       
             x = F.conv2d(x, w, stride=1, padding=0)
-            print("size of x after filter:", x.shape)
-
             if self.poolings_:
                 x = F.max_pool2d(x, self.poolings_[layer])
-                print("size of x after pool:", x.shape)
-                print(" ")
                 layer += 1
         
         t1 = time.time()
-        #return (x.numpy(), (t1-t0))
-        return (x.numpy(), (t1-t0), self.conv_filters_)
+        return (x.numpy(), (t1-t0))

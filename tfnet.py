@@ -14,28 +14,19 @@ class TFNet():
             self.conv_filters_.append(w_array)
                 
         self.poolings_ = poolings
-
-        
+      
         
     def forward_(self, x):
         # input x is in form of [nSamples x nChannels x Height x Width] i.e. "NCHW"
         layer = 0
         t0 = time.time()
         for w in self.conv_filters_:
-            print("layer:", layer)
-            print("size of x before:", x.shape)
-            print("size of filter :", w.shape)
-
             x = tf.nn.conv2d(x, w, strides=[1,1,1,1], padding='VALID', data_format='NCHW')
-            print("size of x after filter:", x.shape)
             if self.poolings_:
                 window = (1, 1, self.poolings_[layer], self.poolings_[layer])
                 x = tf.nn.max_pool(x, window, window, padding='VALID', data_format='NCHW')
-                print("size of x after pool:", x.shape)
-                print(" ")
                 layer += 1
-
-        
+                
         t1 = time.time()
         return (x, (t1-t0))
         
@@ -44,6 +35,4 @@ class TFNet():
         x, runTime = self.forward_(x)
         with tf.Session() as sess:  
             x = sess.run(x) # session returns numpy array
-            #return (x, runTime)
-            return (x, runTime, self.conv_filters_)
-        
+            return (x, runTime)        

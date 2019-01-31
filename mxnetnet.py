@@ -22,21 +22,12 @@ class MXNetNet():
         
         layer = 0
         t0 = time.time()
-        for w in self.conv_filters_:           
-            print("layer:", layer)
-            print("size of x before:", x.shape)
-            print("size of filter :", w.shape)
-            
+        for w in self.conv_filters_:                       
             x = nd.Convolution(data=x, weight=w, kernel=w.shape[-2:], num_filter=w.shape[0], no_bias=True)
-            print("size of x after filter:", x.shape)
-
             if self.poolings_:
                 window = (self.poolings_[layer], self.poolings_[layer])
                 x = nd.Pooling(data=x, pool_type="max", kernel=window, stride=window)
-                print("size of x after pool:", x.shape)
-                print(" ")
                 layer += 1
         
         t1 = time.time()
-        #return (x.numpy(), (t1-t0))
-        return (x.asnumpy(), (t1-t0), self.conv_filters_)
+        return (x.asnumpy(), (t1-t0))
