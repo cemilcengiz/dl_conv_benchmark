@@ -14,6 +14,21 @@
 * limitations under the License.
 *******************************************************************************/
 
+//
+// Timing utility for Unix
+#include <sys/time.h>
+#include <sys/resource.h>
+
+double get_time()
+{
+    struct timeval t;
+    struct timezone tzp;
+    gettimeofday(&t, &tzp);
+    return t.tv_sec + t.tv_usec*1e-6;
+}
+#define PRINT_DATA 0
+#define NUM_EXPERIMENTS 512
+
 // Required for posix_memalign
 #define _POSIX_C_SOURCE 200112L
 
@@ -166,19 +181,24 @@ mkldnn_status_t simple_net() {
 
     /* check output memory before of computation */
     int outSize = inBS * outCh * outHeight * outWidth;
-    printf("\nOutput values before calculation:\n");
-    for (int i = 0; i < outSize; i++) {
-        printf("%d th entry = %f\n", i ,net_dst[i]);
+    if (PRINT_DATA) {
+        printf("\nOutput values before calculation:\n");
+        for (int i = 0; i < outSize; i++) {
+            printf("%d th entry = %f\n", i ,net_dst[i]);
+        }
     }
+
 
     /* fill the user input tensor with values for testing */
     int inSize = inBS * inCh * inHeight * inWidth;
     for (int i = 0; i < inSize; i++) {
         net_src[i] = i;
     }
-    printf("Input values: \n");
-    for (int i = 0; i < inSize; i++) {
-        printf("%d th entry = %f\n", i ,net_src[i]);
+    if (PRINT_DATA) {
+        printf("Input values: \n");
+        for (int i = 0; i < inSize; i++) {
+            printf("%d th entry = %f\n", i ,net_src[i]);
+        }
     }
 
     /* conv1
@@ -208,9 +228,11 @@ mkldnn_status_t simple_net() {
     for (int i = 0; i < conv1_weightsSize; i++) {
         conv1_weights[i] = i;
     }
-    printf("conv1 values: \n");
-    for (int i = 0; i < conv1_weightsSize; i++) {
-        printf("%d th entry = %f\n", i ,conv1_weights[i]);
+    if (PRINT_DATA) {
+        printf("conv1 values: \n");
+        for (int i = 0; i < conv1_weightsSize; i++) {
+            printf("%d th entry = %f\n", i ,conv1_weights[i]);
+        }
     }
 
     int conv1_biasSize = product(conv1_bias_sizes, 1);
@@ -404,9 +426,11 @@ mkldnn_status_t simple_net() {
           for (int i = 0; i < conv2_weightsSize; i++) {
               conv2_weights[i] = i;
           }
-          printf("conv2 values: \n");
-          for (int i = 0; i < conv2_weightsSize; i++) {
-              printf("%d th entry = %f\n", i ,conv2_weights[i]);
+          if (PRINT_DATA) {
+              printf("conv2 values: \n");
+              for (int i = 0; i < conv2_weightsSize; i++) {
+                  printf("%d th entry = %f\n", i ,conv2_weights[i]);
+              }
           }
 
           int conv2_biasSize = product(conv2_bias_sizes, 1);
@@ -607,10 +631,13 @@ mkldnn_status_t simple_net() {
 
     /* since we did the conv out reordering i.e., out->prim, we don't need to
     bother with blocks. Just use the reordered output finally */
-    printf("\nReordered outputs i.e the simplest way of outputting if you did reordering\n");
-    for (int i = 0; i < outSize; i++) {
-        printf("Directly %d th entry = %f\n", i ,net_dst[i]);
+    if (PRINT_DATA) {
+        printf("\nReordered outputs i.e the simplest way of outputting if you did reordering\n");
+        for (int i = 0; i < outSize; i++) {
+            printf("Directly %d th entry = %f\n", i ,net_dst[i]);
+        }
     }
+
 
 
     /* clean-up */
@@ -682,6 +709,17 @@ mkldnn_status_t simple_net() {
 }
 
 int main(int argc, char **argv) {
+    double t1, t2;
+    double t_avg = 0;
+    for(int i=0; i < NUM_EXPERIMENTS; i++) {
+        t1 = get_time();
+        simple_net();
+        t2 = get_time();
+        t_avg += t2-t1;
+    }
+    t_avg /= NUM_EXPERIMENTS;
+    printf("\nElapsed time : %f secondsn\n", t_avg);
+
     mkldnn_status_t result = simple_net();
     printf("%s\n", (result == mkldnn_success) ? "passed" : "failed");
     return result;
