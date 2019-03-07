@@ -1,5 +1,4 @@
 import numpy as np
-import time
 import mxnet as mx
 from mxnet import nd, autograd, gluon
 
@@ -20,7 +19,6 @@ class MXNetNet():
         x = mx.nd.array(x)
         
         layer = 0
-        t0 = time.time()
         for w in self.conv_filters_:                       
             x = nd.Convolution(data=x, weight=w, kernel=w.shape[-2:], num_filter=w.shape[0], no_bias=True)
             if self.poolings_:
@@ -28,5 +26,4 @@ class MXNetNet():
                 x = nd.Pooling(data=x, pool_type="max", kernel=window, stride=window)
                 layer += 1
         
-        t1 = time.time()
-        return (x.asnumpy(), (t1-t0))
+        return x.asnumpy()

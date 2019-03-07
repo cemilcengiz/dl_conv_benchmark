@@ -1,5 +1,4 @@
 import numpy as np
-import time
 import tensorflow as tf
 
 class TFNet():
@@ -12,25 +11,24 @@ class TFNet():
             self.conv_filters_.append(w_array)
                 
         self.poolings_ = poolings
-      
         
+    
     def forward_(self, x):
         # input x is in form of [nSamples x nChannels x Height x Width] i.e. "NCHW"
         layer = 0
-        t0 = time.time()
         for w in self.conv_filters_:
             x = tf.nn.conv2d(x, w, strides=[1,1,1,1], padding='VALID', data_format='NCHW')
             if self.poolings_:
                 window = (1, 1, self.poolings_[layer], self.poolings_[layer])
                 x = tf.nn.max_pool(x, window, window, padding='VALID', data_format='NCHW')
                 layer += 1
-                
-        t1 = time.time()
-        return (x, (t1-t0))
+        return x
         
     
-    def forward(self, x):
-        x, runTime = self.forward_(x)
-        with tf.Session() as sess:  
-            x = sess.run(x) # session returns numpy array
-            return (x, runTime)        
+    def forward(self, x_):
+        x = self.forward_(x_)
+        with tf.Session() as sess:
+            # Evaluate the tensor `x`
+            x_out = sess.run(x) # session returns numpy array
+        return x_out
+      

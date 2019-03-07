@@ -14,22 +14,12 @@
 * limitations under the License.
 *******************************************************************************/
 
-//
-// Timing utility for Unix
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <stdlib.h>
-double get_time()
-{
-    struct timeval t;
-    //struct timezone tzp;
-    //gettimeofday(&t, &tzp);
-    gettimeofday(&t, NULL);
-    return t.tv_sec + t.tv_usec*1e-6;
-}
-#define PRINT_DATA 0
-#define NUM_EXPERIMENTS 512
 
+// Timing utility
+#include <time.h>
+#define NUM_EXPERIMENTS 8
+
+#define PRINT_DATA 0
 // Required for posix_memalign
 #define _POSIX_C_SOURCE 200112L
 
@@ -123,6 +113,8 @@ static void init_data_memory(uint32_t dim, const int *dims,
     CHECK(mkldnn_primitive_desc_destroy(user_pd));
 }
 
+
+
 mkldnn_status_t prepare_reorder(
         mkldnn_primitive_t *user_memory, /** in */
         const_mkldnn_primitive_desc_t *prim_memory_pd, /** in */
@@ -167,7 +159,7 @@ mkldnn_status_t prepare_reorder(
 }
 
 mkldnn_status_t simple_net(int input_size[], int conv1_size[], int pool1_window_size,
-                            int conv2_size[], int pool2_window_size, int output_size[]) {
+			   int conv2_size[], int pool2_window_size, int output_size[], double* t) {
     /* input-output sizes of overall system */
     int inBS, inCh, inHeight, inWidth, outCh, outHeight, outWidth;
     inBS = input_size[0]; inCh = input_size[1]; inHeight = input_size[2]; inWidth = input_size[3];
@@ -228,6 +220,7 @@ mkldnn_status_t simple_net(int input_size[], int conv1_size[], int pool1_window_
     float *conv1_bias = (float *)aligned_malloc(
             product(conv1_bias_sizes, 1) * sizeof(float), 64);
 
+
     /* fill the user conv filter tensors with values for testing */
     int conv1_weightsSize = product(conv1_user_weights_sizes, 4);
     for (int i = 0; i < conv1_weightsSize; i++) {
@@ -244,6 +237,7 @@ mkldnn_status_t simple_net(int input_size[], int conv1_size[], int pool1_window_
     for (int i = 0; i < conv1_biasSize; i++) {
         conv1_bias[i] = 0;
     }
+
 
     /* create memory for user data */
     mkldnn_primitive_t conv1_user_src_memory, conv1_user_weights_memory,
@@ -567,8 +561,8 @@ mkldnn_status_t simple_net(int input_size[], int conv1_size[], int pool1_window_
       /* create memory for pool2_dst data */
       const_mkldnn_primitive_desc_t pool2_dst_pd =
           mkldnn_primitive_desc_query_pd(pool2_pd, mkldnn_query_dst_pd, 0);
-      CHECK(mkldnn_primitive_create(
-              &pool2_internal_dst_memory, pool2_dst_pd, NULL, NULL));
+     // CHECK(mkldnn_primitive_create(
+     //         &pool2_internal_dst_memory, pool2_dst_pd, NULL, NULL));
       size_t pool2_dst_size = mkldnn_memory_primitive_desc_get_size(pool2_dst_pd);
       float *pool2_dst_buffer = (float *)aligned_malloc(pool2_dst_size, 64);
 
@@ -622,12 +616,15 @@ mkldnn_status_t simple_net(int input_size[], int conv1_size[], int pool1_window_
     net[n++] = pool2;
     if (pool2_reorder_dst) net[n++] = pool2_reorder_dst;
 
+    clock_t t1, t2;
+    t1 = clock();
     mkldnn_stream_t stream;
     CHECK(mkldnn_stream_create(&stream, mkldnn_eager));
     CHECK(mkldnn_stream_submit(stream, n, net, NULL));
     CHECK(mkldnn_stream_wait(stream, n, NULL));
-
-
+    mkldnn_stream_destroy(stream);
+    t2 = clock();
+    *t = ((double)t2-t1) / CLOCKS_PER_SEC;
 
     /* check result of computation */
     /*
@@ -654,7 +651,6 @@ mkldnn_status_t simple_net(int input_size[], int conv1_size[], int pool1_window_
     CHECK(mkldnn_primitive_desc_destroy(conv2_pd));
     CHECK(mkldnn_primitive_desc_destroy(pool2_pd));
 
-    mkldnn_stream_destroy(stream);
 
     _free(net_src);
     _free(net_dst);
@@ -726,25 +722,24 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/kuacc/users/ccengiz17/MKL_DNN/mkl-dnn/b
 ***/
 
 int main(int argc, char **argv) {
-    int input_size[] = {1,1,6,6}; /* inBS, inCh, inHeight, inWidth */
-    int conv1_size[] = {1,1,3,3}; /* conv1_outCh, conv1_inCh, conv1_kernelH, conv1_kernelW */
-    int pool1_window_size = 1;
-    int conv2_size[] = {1,1,2,2}; /* conv2_outCh, conv2_inCh, conv2_kernelH, conv2_kernelW */
-    int pool2_window_size = 1;
-    int output_size[] = {1, 3, 3};  /* outCh, outHeight, outWidth */
 
-    double t1, t2;
+    int input_size[] = {2,3,32,32}; // inBS, inCh, inHeight, inWidth 
+    int conv1_size[] = {256,3,3,3}; // conv1_outCh, conv1_inCh, conv1_kernelH, conv1_kernelW 
+    int pool1_window_size = 2;
+    int conv2_size[] = {512,256,3,3}; // conv2_outCh, conv2_inCh, conv2_kernelH, conv2_kernelW 
+    int pool2_window_size = 2;
+    int output_size[] = {512, 6, 6};  // outCh, outHeight, outWidth 
+    double t;
     double t_avg = 0;
+    mkldnn_status_t result;
     for(int i = 0; i < NUM_EXPERIMENTS; i++) {
-        t1 = get_time();
-        simple_net(input_size, conv1_size, pool1_window_size, conv2_size, pool2_window_size, output_size);
-        t2 = get_time();
-        t_avg += t2-t1;
+      result = simple_net(input_size, conv1_size, pool1_window_size, conv2_size, pool2_window_size, output_size, &t);
+      t_avg += t;
     }
     t_avg /= NUM_EXPERIMENTS;
-    printf("\nElapsed time : %f secondsn\n", t_avg);
+    printf("\nElapsed time : %f seconds\n", t_avg);
 
-    mkldnn_status_t result = simple_net(input_size, conv1_size, pool1_window_size, conv2_size, pool2_window_size, output_size);
+    result = simple_net(input_size, conv1_size, pool1_window_size, conv2_size, pool2_window_size, output_size, &t);
     printf("%s\n", (result == mkldnn_success) ? "passed" : "failed");
     return result;
 }

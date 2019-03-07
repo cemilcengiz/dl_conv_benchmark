@@ -1,5 +1,4 @@
 import numpy as np
-import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -22,12 +21,10 @@ class PytorchNet(nn.Module):
         x = torch.tensor(x, dtype=torch.float32) # returns copy
         
         layer = 0
-        t0 = time.time()
         for w in self.conv_filters_:                       
             x = F.conv2d(x, w, stride=1, padding=0)
             if self.poolings_:
                 x = F.max_pool2d(x, self.poolings_[layer])
                 layer += 1
-        
-        t1 = time.time()
-        return (x.numpy(), (t1-t0))
+                
+        return x.numpy()
