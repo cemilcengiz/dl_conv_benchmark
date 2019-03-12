@@ -1,0 +1,72 @@
+
+Two layer-CNN i.e. conv1-pool1-conv2-pool2.
+input size ---> inCh, inHeight, inWidth = (3,32,32)
+conv1 size --->  conv1_outCh, conv1_inCh, conv1_kernelH, conv1_kernelW = (256, 3, 3, 3)
+pool1 window size ---> poolings = (2,2)
+conv2 size --->  conv2_outCh, conv2_inCh, conv2_kernelH, conv2_kernelW = (512, 256, 3, 3)
+pool2 window size ---> poolings = (2,2)
+output size ---> outCh, outHeight, outWidth = (512, 6, 6)
+
+
+
+**********************************************************************************************
+(batch size : 32)
+-Results of first run:
+	pytorch_CNN took 1.0092 seconds.
+	TF_CNN took 0.70376 seconds.
+	MXNet_CNN took 0.83664 seconds.
+
+-Results averaged over 8 runs:
+	pytorch_CNN took 0.40847 seconds.c
+	TF_CNN took 0.52025 seconds.
+	MXNet_CNN took 0.62225 seconds.
+
+MKL-DNN C API: 0.55 seconds  (averaged over 8 runs)
+
+
+********************************************************************************************
+(batch size : 64)
+-Results of first run:
+	pytorch_CNN took 1.901 seconds.
+	TF_CNN took 1.1685 seconds.
+	MXNet_CNN took 1.659 seconds.
+
+-Results averaged over 8 runs:
+	pytorch_CNN took 0.77395 seconds.
+	TF_CNN took 0.85582 seconds.
+	MXNet_CNN took 1.2811 seconds.
+
+MKL-DNN C API: 1.0 seconds (averaged over 8 runs)
+
+
+
+********************************************************************************************
+(batch size : 128)
+-Results of first run:
+	pytorch_CNN took 3.7049 seconds.
+	TF_CNN took 1.9359 seconds.
+	MXNet_CNN took 2.4704 seconds.
+
+
+-Results averaged over 8 runs:
+	pytorch_CNN took 1.5111 seconds.
+	TF_CNN took 1.536 seconds.
+	MXNet_CNN took 2.5014 seconds.
+
+MKL-DNN C API: 1.92 seconds (averaged over 8 runs)
+
+
+
+********************************************************************************************
+(batch size : 256)
+-Results of first run:
+	pytorch_CNN took 7.1847 seconds.
+	TF_CNN took 7.7647 seconds.
+	MXNet_CNN took 5.0597 seconds.
+
+-Results averaged over 8 runs:
+	pytorch_CNN took 3.0693 seconds.
+	TF_CNN took 7.2332 seconds.
+	MXNet_CNN took 4.9608 seconds.
+
+MKL-DNN C API: 3.75 seconds (averaged over 8 runs)

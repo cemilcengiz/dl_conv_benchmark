@@ -412,6 +412,17 @@ mkldnn_status_t simple_net() {
     return mkldnn_success;
 }
 
+/***
+* Usage:
+To compile:
+gcc -Wall simple_CNN_benchmark_small.c -o bin/simple_CNN_benchmark_small_c -I /kuacc/users/ccengiz17/MKL_DNN/mkl-dnn/include -L /kuacc/users/ccengiz17/MKL_DNN/mkl-dnn/build/src -lmkldnn -std=c99
+
+To add the dynamic library:
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/kuacc/users/ccengiz17/MKL_DNN/mkl-dnn/build/src/
+***/
+
+
+
 int main(int argc, char **argv) {
     mkldnn_status_t result = simple_net();
     printf("%s\n", (result == mkldnn_success) ? "passed" : "failed");

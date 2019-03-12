@@ -715,7 +715,7 @@ mkldnn_status_t simple_net(int input_size[], int conv1_size[], int pool1_window_
 /***
 * Usage:
 To compile:
-gcc -Wall simple_CNN_correctness_test.c -o bin/simple_CNN_correctness_test_c -I /kuacc/users/ccengiz17/MKL_DNN/mkl-dnn/include -L /kuacc/users/ccengiz17/MKL_DNN/mkl-dnn/build/src -lmkldnn -std=c99
+gcc -Wall simple_CNN_benchmark.c -o bin/simple_CNN_benchmark_c -I /kuacc/users/ccengiz17/MKL_DNN/mkl-dnn/include -L /kuacc/users/ccengiz17/MKL_DNN/mkl-dnn/build/src -lmkldnn -std=c99
 
 To add the dynamic library:
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/kuacc/users/ccengiz17/MKL_DNN/mkl-dnn/build/src/
@@ -723,7 +723,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/kuacc/users/ccengiz17/MKL_DNN/mkl-dnn/b
 
 int main(int argc, char **argv) {
 
-    int input_size[] = {2,3,32,32}; // inBS, inCh, inHeight, inWidth 
+    int input_size[] = {32,3,32,32}; // inBS, inCh, inHeight, inWidth 
     int conv1_size[] = {256,3,3,3}; // conv1_outCh, conv1_inCh, conv1_kernelH, conv1_kernelW 
     int pool1_window_size = 2;
     int conv2_size[] = {512,256,3,3}; // conv2_outCh, conv2_inCh, conv2_kernelH, conv2_kernelW 
